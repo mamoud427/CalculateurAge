@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace CalculateurAge.ViewModels;
 
 public class CalculateurViewModel : BaseViewModel
@@ -7,7 +9,10 @@ public class CalculateurViewModel : BaseViewModel
 	private string _resultat = "";
 	private bool _resultatVisible;
 
-	public string Nom
+    private string _statut = "";
+    private int _joursRestants;
+
+    public string Nom
 	{
 		get => _nom;
 		set { if (SetField(ref _nom, value)) CalculerCommand.Rafraichir(); }
@@ -31,20 +36,65 @@ public class CalculateurViewModel : BaseViewModel
 		set => SetField(ref _resultatVisible, value);
 	}
 
-	public RelayCommand CalculerCommand { get; }
+    // fonctionnalite majeur/mineur
+    public string Statut
+    {
+        get => _statut;
+        set => SetField(ref _statut, value);
+    }
 
-	public CalculateurViewModel()
+	// fonctionnalite pour indiquer les jours restants avant le prochain anniversaire
+    public int JoursRestants
+    {
+        get => _joursRestants;
+        set => SetField(ref _joursRestants, value);
+    }
+
+	// fonctionnalite sur la presentation de l'historique
+    public ObservableCollection<string> Historique { get; } = new();
+
+
+    public RelayCommand CalculerCommand { get; }
+
+    // fonctionnalite pour la commande effacer
+    public RelayCommand EffacerCommand { get; }
+
+    public CalculateurViewModel()
 	{
 		CalculerCommand = new RelayCommand(Calculer, ()=> !string.IsNullOrWhiteSpace(Nom));
-	}
 
-	private void Calculer()
-	{
-		int age = DateTime.Today.Year - DateNaissance.Year;
+        EffacerCommand = new RelayCommand(Effacer);
+    }
 
-		if (DateNaissance.Date > DateTime.Today.AddYears(-age)) age--;
+    private void Calculer()
+    {
+        int age = DateTime.Today.Year - DateNaissance.Year;
 
-		Resultat = $"{Nom}, vous avez {age} ans.";
-		ResultatVisible = true;
-	}
-}
+        if (DateNaissance.Date > DateTime.Today.AddYears(-age)) age--;
+
+        Resultat = $"{Nom}, vous avez {age} ans.";
+        ResultatVisible = true;
+
+
+        Statut = age >= 18 ? "Majeur" : "Mineur";
+
+        DateTime prochainAnniversaire =
+            DateNaissance.AddYears(DateTime.Today.Year - DateNaissance.Year);
+        if (prochainAnniversaire < DateTime.Today)
+            prochainAnniversaire = prochainAnniversaire.AddYears(1);
+        JoursRestants = (prochainAnniversaire - DateTime.Today).Days;
+
+        Historique.Insert(0, $"{Nom} — {age} ans ({DateTime.Now:dd/MM/yyyy HH:mm})");
+    }
+
+    private void Effacer()
+    {
+        Nom = "";
+        DateNaissance = DateTime.Today.AddYears(-20);
+        Resultat = "";
+        ResultatVisible = false;
+        Statut = "";
+        JoursRestants = 0;
+    }
+ }
+
