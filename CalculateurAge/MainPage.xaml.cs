@@ -1,4 +1,7 @@
-﻿namespace CalculateurAge
+﻿using System.Threading.Tasks;
+using CalculateurAge.Views;
+
+namespace CalculateurAge
 {
     public partial class MainPage : ContentPage
     {
@@ -9,7 +12,7 @@
             InitializeComponent();
         }
 
-        private void OnCalculerClicked(object? sender, EventArgs e)
+        private async void OnCalculerClicked(object? sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(entryNom.Text))
             {
@@ -21,16 +24,8 @@
 
             if (d.Date > DateTime.Today.AddYears(-age)) age--;
 
-            lblResultat.Text = $"{entryNom.Text}, Vous avez {age} ans";
-            lblResultat.IsVisible = true;
-            //count++;
-
-            //if (count == 1)
-            //    btnCalculer.Text = $"Clicked {count} time";
-            //else
-            //    btnCalculer.Text = $"Clicked {count} times";
-
-            //SemanticScreenReader.Announce(btnCalculer.Text);
+            await Shell.Current.GoToAsync($"{nameof(ResultatPage)}?nom={entryNom.Text}&age={age}");
+           
         }
     }
 }
